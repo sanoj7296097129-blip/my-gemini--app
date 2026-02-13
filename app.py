@@ -8,10 +8,12 @@ import os
 st.set_page_config(page_title="Sreesa AI Assistant", page_icon="👩‍💻")
 st.title("Sreesa AI Assistant 👩‍💻")
 
-# आपकी नई API Key सीधे यहाँ जोड़ दी है
+# आपकी फ्रेश API Key (सीधा कोड में)
 API_KEY = "AIzaSyC4KOEKxXaEmNoTQrvx0H_yCJmE2xTU-Ck"
 genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+
+# यहाँ हमने मॉडल का नाम बदल दिया है ताकि 404 एरर न आए
+model = genai.GenerativeModel('models/gemini-1.5-flash-latest')
 
 # साइडबार में फोटो फीचर
 with st.sidebar:
@@ -50,7 +52,8 @@ if prompt := st.chat_input("श्रीसा से बात करें..."
             st.audio("sreesa_voice.mp3", format="audio/mp3")
             st.session_state.messages.append({"role": "assistant", "content": res_text})
         except Exception as e:
-            st.error(f"ओह! कुछ दिक्कत है: {e}")
+            st.error(f"क्षमा करें, जवाब देने में दिक्कत हो रही है। कृपया दोबारा कोशिश करें।")
+
 
 
 
