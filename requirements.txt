@@ -1,8 +1,4 @@
-import streamlit as st
-import google.generativeai as genai
-from PIL import Image
-from gtts import gTTS
-import io streamlit
+streamlit
 google-generativeai
 Pillow
 gTTS
