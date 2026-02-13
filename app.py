@@ -1,8 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
-from PIL import Image
 
-# 1. पेज और पर्सनालिटी सेटअप
+# पेज सेटअप
 st.set_page_config(page_title="Sreesa AI Assistant", page_icon="👩‍💻")
 st.title("Sreesa AI Assistant 👩‍💻")
 
@@ -11,19 +10,16 @@ API_KEY = "AIzaSyAb5f2VtEo9trR2tltGIQLBdMU8wPU8SvA"
 genai.configure(api_key=API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-# 2. साइडबार में 'About' और 'Video' फीचर
+# साइडबार
 with st.sidebar:
-    st.title("Sreesa Smart Features")
-    st.info("नमस्ते! मैं आपकी स्मार्ट असिस्टेंट श्रीसा हूँ। मैं फोटो देख सकती हूँ और आपके लिए वीडियो भी बना सकती हूँ।")
-    
-    st.subheader("Video Generator 🎬")
-    video_prompt = st.text_input("किस बारे में वीडियो बनाना है?")
-    if st.button("Generate Video"):
-        st.warning("Video generation feature is being linked to Veo model. Coming soon!")
+    st.title("Sreesa Settings")
+    st.info("नमस्ते! मैं श्रीसा हूँ। आपकी पर्सनल AI असिस्टेंट।")
+    if st.button("Reboot Sreesa"):
+        st.rerun()
 
-# 3. चैट फंक्शन
+# चैट मेमोरी
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "assistant", "content": "नमस्ते मालिक! आपकी श्रीसा हाजिर है। आज हम क्या नया करेंगे?"}]
+    st.session_state.messages = [{"role": "assistant", "content": "नमस्ते! अब सब कुछ ठीक हो गया है। पूछिए, मैं आपकी क्या मदद करूँ?"}]
 
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
@@ -36,9 +32,11 @@ if prompt := st.chat_input("श्रीसा से बात करें..."
 
     with st.chat_message("assistant"):
         try:
-            # बिना देरी के जवाब देने के लिए सीधा कनेक्शन
+            # बिना किसी देरी के जवाब
             response = model.generate_content(prompt)
-            st.markdown(response.text)
-            st.session_state.messages.append({"role": "assistant", "content": response.text})
-        except Exception:
-            st.error("माफ़ कीजिये, कनेक्शन अभी भी बन रहा है। कृपया Reboot बटन दबाएं।")
+            res_text = response.text
+            st.markdown(res_text)
+            st.session_state.messages.append({"role": "assistant", "content": res_text})
+        except Exception as e:
+            st.error("Google Server से कनेक्शन नहीं हो पाया। कृपया अपनी API Key चेक करें या 10 सेकंड बाद फिर कोशिश करें।")
+
