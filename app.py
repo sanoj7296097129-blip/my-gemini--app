@@ -1,39 +1,53 @@
+
 import streamlit as st
 import google.generativeai as genai
+from PIL import Image
+from gtts import gTTS
+import os
 
-# ऐप का नाम
-st.title("Sreesa AI Assistant")
+st.set_page_config(page_title="Sreesa AI Assistant")
+st.title("Sreesa Smart AI (Voice & Vision)")
 
-# API Key को सुरक्षित तरीके से उठाना
+# API Key सेटअप
 try:
     api_key = st.secrets["GEMINI_API_KEY"]
     genai.configure(api_key=api_key)
-    
-    # सही मॉडल का नाम (gemini-1.5-flash)
     model = genai.GenerativeModel('gemini-1.5-flash')
 
-    # चैट की याददाश्त (Memory) के लिए
+    # 1. इमेज अपलोड करने का फीचर
+    uploaded_file = st.sidebar.file_uploader("फोटो अपलोड करें", type=["jpg", "jpeg", "png"])
+    
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # पुरानी बातचीत दिखाना
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # यूजर का सवाल लेना
-    if prompt := st.chat_input("नमस्ते! मैं श्रीसा हूँ। मैं आपकी क्या मदद कर सकती हूँ?"):
+    if prompt := st.chat_input("मुझसे बात करें या फोटो के बारे में पूछें:"):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # AI का जवाब जनरेट करना
         with st.chat_message("assistant"):
-            response = model.generate_content(prompt)
-            st.markdown(response.text)
-            st.session_state.messages.append({"role": "assistant", "content": response.text})
+            # अगर फोटो अपलोड है, तो उसे AI को भेजें
+            if uploaded_file:
+                img = Image.open(uploaded_file)
+                response = model.generate_content([prompt, img])
+            else:
+                response = model.generate_content(prompt)
+            
+            res_text = response.text
+            st.markdown(res_text)
+
+            # 2. आवाज़ (Voice) का फीचर
+            tts = gTTS(text=res_text, lang='hi')
+            tts.save("response.mp3")
+            st.audio("response.mp3", format="audio/mp3")
+            
+            st.session_state.messages.append({"role": "assistant", "content": res_text})
 
 except Exception as e:
-    st.error("कृपया ऐप की 'Secrets' सेटिंग्स में अपनी नई 'GEMINI_API_KEY' अपडेट करें।")
+    st.error("सेटअप में कुछ कमी है। कृपया अपनी 'Secrets' चेक करें।")
 
   
