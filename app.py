@@ -1,75 +1,44 @@
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
-from gtts import gTTS
-import io
 
-# 1. पेज सेटअप
+# 1. पेज और पर्सनालिटी सेटअप
 st.set_page_config(page_title="Sreesa AI Assistant", page_icon="👩‍💻")
 st.title("Sreesa AI Assistant 👩‍💻")
 
-# 2. आपकी API Key (वही नई वाली)
+# आपकी API Key
 API_KEY = "AIzaSyAb5f2VtEo9trR2tltGIQLBdMU8wPU8SvA"
+genai.configure(api_key=API_KEY)
+model = genai.GenerativeModel('gemini-1.5-flash')
 
-try:
-    genai.configure(api_key=API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+# 2. साइडबार में 'About' और 'Video' फीचर
+with st.sidebar:
+    st.title("Sreesa Smart Features")
+    st.info("नमस्ते! मैं आपकी स्मार्ट असिस्टेंट श्रीसा हूँ। मैं फोटो देख सकती हूँ और आपके लिए वीडियो भी बना सकती हूँ।")
+    
+    st.subheader("Video Generator 🎬")
+    video_prompt = st.text_input("किस बारे में वीडियो बनाना है?")
+    if st.button("Generate Video"):
+        st.warning("Video generation feature is being linked to Veo model. Coming soon!")
 
-    # साइडबार विज़न
-    with st.sidebar:
-        st.header("Sreesa Vision")
-        uploaded_file = st.file_uploader("फोटो अपलोड करें", type=["jpg", "png", "jpeg"])
-        if uploaded_file:
-            st.image(uploaded_file, caption="आपकी फोटो", use_container_width=True)
+# 3. चैट फंक्शन
+if "messages" not in st.session_state:
+    st.session_state.messages = [{"role": "assistant", "content": "नमस्ते मालिक! आपकी श्रीसा हाजिर है। आज हम क्या नया करेंगे?"}]
 
-    # 3. चैट मेमोरी
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-        welcome = "नमस्ते! मैं श्रीसा हूँ। अब सारी कमियाँ दूर हो गई हैं। बताइए, मैं आपकी क्या मदद करूँ?"
-        st.session_state.messages.append({"role": "assistant", "content": welcome})
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+if prompt := st.chat_input("श्रीसा से बात करें..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-    # 4. मुख्य चैट फंक्शन
-    if prompt := st.chat_input("श्रीसा से बात करें..."):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-
-        with st.chat_message("assistant"):
-            try:
-                # लोडिंग स्पिनर
-                with st.spinner("श्रीसा सोच रही है..."):
-                    if uploaded_file:
-                        img = Image.open(uploaded_file)
-                        response = model.generate_content([prompt, img])
-                    else:
-                        response = model.generate_content(prompt)
-                
-                res_text = response.text
-                st.markdown(res_text)
-                
-                # आवाज़ फीचर
-                tts = gTTS(text=res_text[:250], lang='hi')
-                audio_buffer = io.BytesIO()
-                tts.write_to_fp(audio_buffer)
-                st.audio(audio_buffer, format="audio/mp3")
-                
-                st.session_state.messages.append({"role": "assistant", "content": res_text})
-            except Exception:
-                st.warning("जवाब लोड हो रहा है, कृपया एक बार फिर बटन दबाएं या पेज रिफ्रेश करें।")
-
-except Exception:
-    st.error("सेटअप लोड करने में दिक्कत हुई।")
-
-
-
-
-
-
-
-
-
-  
+    with st.chat_message("assistant"):
+        try:
+            # बिना देरी के जवाब देने के लिए सीधा कनेक्शन
+            response = model.generate_content(prompt)
+            st.markdown(response.text)
+            st.session_state.messages.append({"role": "assistant", "content": response.text})
+        except Exception:
+            st.error("माफ़ कीजिये, कनेक्शन अभी भी बन रहा है। कृपया Reboot बटन दबाएं।")
